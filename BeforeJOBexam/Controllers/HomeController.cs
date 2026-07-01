@@ -18,10 +18,29 @@ namespace BeforeJOBexam.Controllers
         // ==========================================
         // 1. READ (List all employees)
         // ==========================================
-        public IActionResult Index()
+        public IActionResult Index(string searchString)
         {
-            var employees = employeeDB.Employees.ToList();
-            return View(employees);
+            ViewData["CurrentFilter"] = searchString;
+
+            var employees = employeeDB.Employees.AsQueryable();
+
+            // Apply search if provided
+            if (!string.IsNullOrWhiteSpace(searchString))
+            {
+                employees = employees.Where(e =>
+                    e.FirstName.Contains(searchString) ||
+                    e.LastName.Contains(searchString) ||
+                    e.Email.Contains(searchString) ||
+                    e.Phone.Contains(searchString));
+            }
+
+            // Show only the 5 most recent employees
+            employees = employees
+                .OrderByDescending(e => e.Id)
+                .Take(5);
+
+            return View(employees.ToList());
+            //if you need last 5 records that were created/updated you need to store when a record was last modified.
         }
 
         // ==========================================
